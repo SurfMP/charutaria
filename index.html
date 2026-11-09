@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141010">
+<meta name="description" content="Controle do estoque de charutos do umidor.">
+<title>Charutaria</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+
+:root{
+  --bg:#141010; --bg2:#1d1715; --card:#241d1a; --card2:#2d2420; --line:#3a2f2a;
+  --tx:#f3ebe3; --tx2:#bfae9f; --tx3:#8a7a6d;
+  --amber:#e0a458; --amber2:#c7873a; --ember:#e2683c; --green:#7fb069; --red:#e05a4f;
+  --r:16px; --shadow:0 10px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{padding-bottom:120px;min-height:100vh}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:8px}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif;font-weight:700;letter-spacing:.2px}
+
+/* Cabeçalho */
+header{padding:22px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{flex:none}
+.brand h1{font-size:1.5rem}
+.brand small{display:block;color:var(--tx3);font-family:system-ui,sans-serif;font-weight:500;font-size:.8rem;letter-spacing:.3px}
+.iconbtn{min-width:44px;height:44px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;color:var(--tx2);font-weight:600;font-size:.9rem}
+.iconbtn:hover{color:var(--tx);border-color:var(--amber2)}
+
+/* Resumo */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px}
+.stat b{display:block;font-family:Georgia,serif;font-size:1.9rem;line-height:1;color:var(--amber)}
+.stat span{font-size:.8rem;color:var(--tx2)}
+
+.suggest{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,#2e2119,#221a16);border:1px solid #4a3426;border-radius:var(--r);padding:12px;margin-bottom:14px;width:100%;text-align:left}
+.suggest .k{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--amber)}
+.suggest .n{font-weight:600}
+.suggest .d{font-size:.82rem;color:var(--tx2)}
+
+/* Controles */
+.controls{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.search{flex:1 1 220px;position:relative}
+.search input{width:100%;height:48px;border-radius:12px;background:var(--card);border:1px solid var(--line);padding:0 14px 0 42px}
+.search svg{position:absolute;left:14px;top:14px;color:var(--tx3)}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px}
+.seg button{height:38px;padding:0 14px;border-radius:9px;color:var(--tx2);font-weight:600;font-size:.9rem}
+.seg button[aria-pressed="true"]{background:var(--card2);color:var(--tx);box-shadow:inset 0 0 0 1px var(--amber2)}
+
+/* Lista */
+.group h2{font-size:1.05rem;color:var(--tx2);margin:18px 2px 8px;display:flex;justify-content:space-between;font-family:system-ui,sans-serif;font-weight:600}
+.group h2 em{font-style:normal;color:var(--tx3);font-weight:500}
+.item{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px;margin-bottom:8px;transition:border-color .15s,transform .1s}
+.item:hover{border-color:var(--amber2)}
+.item:active{transform:scale(.99)}
+.thumb{width:64px;height:64px;border-radius:12px;background:var(--card2) center/cover no-repeat;flex:none;display:flex;align-items:center;justify-content:center;color:var(--tx3)}
+.item .info{flex:1;min-width:0}
+.item .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{font-size:.85rem;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .m{font-size:.75rem;color:var(--tx3);margin-top:2px}
+.qty{min-width:52px;height:52px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+.qty b{font-family:Georgia,serif;font-size:1.35rem;line-height:1}
+.qty small{font-size:.62rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px}
+.qty.low{border-color:var(--ember)} .qty.low b{color:var(--ember)}
+.qty.zero{opacity:.5}
+
+.empty{text-align:center;padding:48px 16px;color:var(--tx2)}
+.empty h2{color:var(--tx);margin:14px 0 6px;font-size:1.3rem}
+
+/* Barra de ações */
+.actions{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 70%,rgba(20,16,16,0));z-index:20}
+.actions .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0}
+.big{height:64px;border-radius:18px;font-weight:700;font-size:1.05rem;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:var(--shadow)}
+.big.in{background:var(--amber);color:#1b120c}
+.big.out{background:var(--card2);color:var(--tx);border:1px solid #5a4030}
+.big.out svg{color:var(--ember)}
+.big:disabled{opacity:.5;cursor:not-allowed}
+
+/* Folha (modal) */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:flex;align-items:flex-end;justify-content:center;animation:fade .15s}
+.sheet{background:var(--bg2);width:100%;max-width:720px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;border:1px solid var(--line);border-bottom:0;padding:8px 18px calc(24px + env(safe-area-inset-bottom));animation:up .2s ease-out}
+@media(min-width:760px){.scrim{align-items:center}.sheet{border-radius:22px;border-bottom:1px solid var(--line);max-height:88vh}}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 10px}
+.sheethead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.sheethead h2{font-size:1.35rem}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}}
+
+.btn{height:52px;border-radius:14px;padding:0 18px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.btn.pri{background:var(--amber);color:#1b120c}
+.btn.sec{background:var(--card);border:1px solid var(--line)}
+.btn.dng{background:transparent;color:var(--red);border:1px solid #5a2b27}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.mt{margin-top:12px}
+
+/* Captura */
+.drop{border:2px dashed #5a4030;border-radius:20px;padding:34px 16px;text-align:center;background:var(--card);display:block;cursor:pointer}
+.drop:hover{border-color:var(--amber)}
+.drop b{display:block;font-size:1.1rem;margin:10px 0 4px}
+.drop span{color:var(--tx2);font-size:.9rem}
+.preview{width:100%;max-height:300px;object-fit:cover;border-radius:16px;display:block;background:var(--card)}
+.scan{position:relative;overflow:hidden;border-radius:16px}
+.scan::after{content:"";position:absolute;left:0;right:0;height:60px;top:-60px;background:linear-gradient(transparent,rgba(224,164,88,.35),transparent);animation:scan 1.6s linear infinite}
+@keyframes scan{to{top:100%}}
+.status{display:flex;align-items:center;gap:10px;color:var(--tx2);margin:14px 2px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--amber);animation:pulse 1s infinite alternate}
+@keyframes pulse{to{opacity:.25}}
+
+/* Formulário */
+label.f{display:block;margin-bottom:10px}
+label.f span{display:block;font-size:.8rem;color:var(--tx2);margin-bottom:4px;font-weight:500}
+label.f input,label.f select,label.f textarea{width:100%;min-height:48px;border-radius:12px;background:var(--card);border:1px solid var(--line);padding:10px 12px}
+label.f textarea{min-height:80px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.conf{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;padding:4px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--tx2)}
+.conf.alta{color:var(--green);border-color:#3f5a35}.conf.media{color:var(--amber);border-color:#5a4426}.conf.baixa{color:var(--ember);border-color:#5a3326}
+.idcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:12px 0}
+.idcard h3{font-size:1.3rem;margin:6px 0 2px}
+.idcard p{color:var(--tx2);font-size:.9rem}
+details.edit{margin-top:10px}
+details.edit summary{cursor:pointer;color:var(--amber);font-weight:600;padding:8px 0;list-style:none}
+details.edit summary::-webkit-details-marker{display:none}
+
+.stepper{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:8px}
+.stepper button{width:56px;height:56px;border-radius:14px;background:var(--card2);font-size:1.6rem;font-weight:700;flex:none}
+.stepper input{flex:1;min-width:0;height:56px;text-align:center;background:transparent;border:0;font-family:Georgia,serif;font-size:2rem;font-weight:700}
+.hint{font-size:.8rem;color:var(--tx3);margin-top:6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chip{height:36px;padding:0 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-weight:600;font-size:.9rem;color:var(--tx2)}
+.chip:hover{border-color:var(--amber2);color:var(--tx)}
+.notice{background:#2a1f17;border:1px solid #5a4030;border-radius:12px;padding:10px 12px;font-size:.88rem;color:var(--tx2);margin:10px 0}
+
+/* Detalhe */
+.hero{width:100%;height:220px;border-radius:18px;background:var(--card2) center/cover no-repeat;margin-bottom:14px}
+.specs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+.spec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.spec small{display:block;font-size:.72rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px}
+.spec b{font-weight:600}
+.lounge{background:radial-gradient(circle at 15% 0%,#3a2618,#1f1714 70%);border:1px solid #4a3426;border-radius:18px;padding:16px;margin:16px 0}
+.lounge h3{display:flex;align-items:center;gap:8px;font-size:1.15rem;color:var(--amber);margin-bottom:8px}
+.lounge ul{list-style:none}
+.lounge li{padding:8px 0 8px 22px;position:relative;color:var(--tx);border-bottom:1px solid rgba(255,255,255,.05)}
+.lounge li:last-child{border:0}
+.lounge li::before{content:"";position:absolute;left:4px;top:16px;width:8px;height:8px;border-radius:50%;background:var(--ember);box-shadow:0 0 8px var(--ember)}
+.lounge .src{font-size:.75rem;color:var(--tx3);margin-top:8px}
+.hist{list-style:none}
+.hist li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.hist li span:last-child{color:var(--tx2);white-space:nowrap}
+.tag{font-size:.72rem;padding:2px 8px;border-radius:99px;background:var(--card2);color:var(--tx2);margin-left:6px}
+.stars{display:flex;gap:6px}
+.stars button{width:46px;height:46px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:1.3rem;color:var(--tx3)}
+.stars button.on{color:var(--amber);border-color:var(--amber2)}
+
+/* Aviso flutuante */
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#f3ebe3;color:#1b120c;border-radius:14px;padding:12px 14px 12px 16px;display:flex;gap:14px;align-items:center;box-shadow:var(--shadow);z-index:60;font-weight:600;max-width:calc(100% - 32px);animation:fade .2s}
+.toast button{color:#9a4b12;font-weight:700;padding:6px 8px}
+.banner{background:#2a1f17;border:1px solid #5a4030;color:var(--tx2);border-radius:12px;padding:10px 12px;font-size:.85rem;margin-top:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+body{padding-top:env(safe-area-inset-top)}
+.opc{display:flex;flex-direction:column;gap:6px;margin-top:-4px;margin-bottom:10px}
+.opc button{text-align:left;padding:10px 12px;border-radius:10px;background:var(--card2);border:1px solid var(--line)}
+.set{display:flex;flex-direction:column;gap:10px}
+.set .btn{justify-content:flex-start}
+.muted{color:var(--tx3);font-size:.82rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="17" width="28" height="7" rx="3.5" fill="#8a5a36"/><rect x="21" y="17" width="5" height="7" fill="#c9a36a"/><rect x="31" y="17.5" width="5" height="6" rx="2" fill="#e2683c"/><path d="M34 14c-2-3 2-4 0-8" stroke="#8a7a6d" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+      <div><h1>Charutaria</h1><small>Seu umidor, em ordem</small></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="iconbtn" id="btnDiario" aria-label="Diário de degustação"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 8h8M8 12h6"/></svg></button>
+      <button class="iconbtn" id="btnConfig" aria-label="Configurações e cópia de segurança"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </div>
+  </header>
+  <div id="banner"></div>
+  <main id="main" aria-live="polite"></main>
+</div>
+
+<nav class="actions" aria-label="Ações principais">
+  <div class="wrap">
+    <button class="big in" id="btnGuardar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 8h3l2-3h8l2 3h3v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg>Guardar</button>
+    <button class="big out" id="btnFumar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3c3 4-2 5 1 9 2 3-1 6-4 6"/><path d="M5 21h14"/></svg>Fumar</button>
+  </div>
+</nav>
+<input type="file" id="cam" accept="image/*" capture="environment" class="sr" aria-hidden="true" tabindex="-1">
+<input type="file" id="arq" accept="application/json,.json" class="sr" aria-hidden="true" tabindex="-1">
+
+<script>
+"use strict";
+const VERSAO_APP = "1.0.0";
+
+/* ============ Base de referência offline ============ */
+// Medidas de referência das vitolas mais comuns (cepo × comprimento em mm). Cada fabricante pode variar.
+const VITOLAS = {
+  "Robusto": [50, 124], "Short Robusto": [50, 102], "Toro": [52, 152], "Gordo": [60, 152], "Churchill": [47, 178],
+  "Double Corona": [49, 194], "Corona": [42, 142], "Petit Corona": [42, 129], "Corona Gorda": [46, 143],
+  "Lonsdale": [42, 165], "Lancero": [38, 192], "Panatela": [38, 152], "Belicoso": [52, 140], "Torpedo": [52, 156],
+  "Pirámide": [52, 156], "Perfecto": [48, 127], "Cigarrilha": [26, 100]
+};
+// Curiosidades de marcas conhecidas (base fixa, sem internet). Confira antes de citar.
+const MARCAS = {
+  "Cohiba": { pais: "Cuba", cur: ["Nasceu em 1966 como charuto reservado a Fidel Castro e a presentes de Estado; só chegou ao mercado em 1982.", "O nome vem da palavra taína usada para designar o tabaco.", "Sua fábrica de origem é a El Laguito, em Havana."] },
+  "Montecristo": { pais: "Cuba", cur: ["Criada em 1935, tem o nome inspirado no romance “O Conde de Monte Cristo”, de Alexandre Dumas.", "A obra era uma das preferidas nas leituras feitas em voz alta pelos lectores das fábricas cubanas.", "O Montecristo No. 2 é um dos torpedos mais conhecidos do mundo."] },
+  "Romeo y Julieta": { pais: "Cuba", cur: ["Marca fundada em 1875, com nome tirado da peça de Shakespeare.", "A vitola Churchill ficou associada à marca pela preferência de Winston Churchill por seus charutos."] },
+  "Partagás": { pais: "Cuba", cur: ["Fundada em 1845 por Don Jaime Partagás, em Havana.", "O Serie D No. 4 é um dos robustos mais vendidos entre os Habanos."] },
+  "H. Upmann": { pais: "Cuba", cur: ["Fundada em 1844 por Herman Upmann, banqueiro alemão que se instalou em Havana.", "Foi uma das primeiras marcas a acondicionar charutos em tubos de alumínio."] },
+  "Hoyo de Monterrey": { pais: "Cuba", cur: ["Marca fundada em 1865 por José Gener.", "O nome vem de uma área de plantio em San Juan y Martínez, na Vuelta Abajo, região de tabaco mais prestigiada de Cuba."] },
+  "Bolívar": { pais: "Cuba", cur: ["Criada em 1902, homenageia Simón Bolívar, cujo retrato aparece no anel.", "Costuma ser lembrada entre as marcas cubanas mais encorpadas."] },
+  "Punch": { pais: "Cuba", cur: ["Uma das marcas cubanas mais antigas, de 1840, criada com olhos no mercado britânico.", "O nome e o personagem do anel remetem à revista satírica inglesa Punch."] },
+  "Trinidad": { pais: "Cuba", cur: ["Por muitos anos foi usada como presente diplomático; o lançamento comercial ocorreu em 1998.", "O Fundadores, vitola longa e fina, é seu formato emblemático."] },
+  "Padrón": { pais: "Nicarágua", cur: ["Fundada em 1964 por José Orlando Padrón, em Miami, com tabaco nicaraguense.", "A Série 1964 Anniversary foi lançada em 1994, nos 30 anos da marca."] },
+  "Arturo Fuente": { pais: "República Dominicana", cur: ["A empresa começou em 1912, em Ybor City, Tampa (Flórida).", "O Fuente Fuente OpusX, lançado em meados dos anos 1990, usa capa cultivada na própria fazenda da família, Chateau de la Fuente."] },
+  "Davidoff": { pais: "República Dominicana", cur: ["Leva o nome de Zino Davidoff; começou com charutos feitos em Cuba, a partir de 1969.", "Em 1990 a produção foi transferida para a República Dominicana."] },
+  "Oliva": { pais: "Nicarágua", cur: ["A família Oliva cultiva tabaco desde o século XIX, em Cuba.", "A linha Serie V Melanio homenageia o patriarca Melanio Oliva."] },
+  "My Father": { pais: "Nicarágua", cur: ["Marca de Don José “Pepín” García e família, com fábrica em Estelí, Nicarágua.", "O nome é uma homenagem do filho, Jaime García, ao pai."] },
+  "Dannemann": { pais: "Brasil", cur: ["Fundada em 1873 pelo alemão Geraldo Dannemann em São Félix, no Recôncavo Baiano.", "O Recôncavo é a região tradicional do tabaco para charutos no Brasil."] },
+  "Alonso Menendez": { pais: "Brasil", cur: ["Charuto produzido na Bahia, no Recôncavo Baiano, região tradicional de tabaco para charutos."] }
+};
+
+/* ============ Utilidades ============ */
+const S = { itens: [], movs: [], modo: "marca", busca: "", ready: false };
+const $ = (s, el = document) => el.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+const chave = c => norm([c.marca, c.linha, c.vitola].join(" "));
+const agora = () => new Date().toISOString();
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const dias = iso => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 864e5));
+const fmtData = iso => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+const nomeDe = c => [c.marca, c.linha].filter(Boolean).join(" ") || "Charuto sem nome";
+const guarda = d => d < 1 ? "guardado hoje" : d < 31 ? `${d} dia${d > 1 ? "s" : ""} de guarda` : d < 365 ? `${Math.floor(d / 30)} ${Math.floor(d / 30) > 1 ? "meses" : "mês"} de guarda` : `${(d / 365).toFixed(1).replace(".", ",")} anos de guarda`;
+const bitolaTxt = c => [c.bitola ? `cepo ${c.bitola}` : "", c.comprimento_mm ? `${c.comprimento_mm} mm` : ""].filter(Boolean).join(" · ");
+const infoMarca = m => { const k = Object.keys(MARCAS).find(x => norm(x) === norm(m)); return k ? MARCAS[k] : null; };
+const IC = {
+  cigar: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="10" width="17" height="4" rx="2"/><path d="M14 10v4M19 10.5h3v3h-3"/></svg>',
+  x: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  cam: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.8"><path d="M3 8h3l2-3h8l2 3h3v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  spark: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6"/></svg>'
+};
+
+/* ============ Armazenamento no celular (IndexedDB) ============ */
+let BD = null;
+function abrirBD() {
+  return new Promise((ok, err) => {
+    const r = indexedDB.open("charutaria", 1);
+    r.onupgradeneeded = () => { const d = r.result; d.createObjectStore("estoque", { keyPath: "id" }); d.createObjectStore("movimentos", { keyPath: "id" }); };
+    r.onsuccess = () => ok(r.result); r.onerror = () => err(r.error);
+  });
+}
+function tx(loja, modo, fn) {
+  return new Promise((ok, err) => { const t = BD.transaction(loja, modo); const st = t.objectStore(loja); const r = fn(st); t.oncomplete = () => ok(r && r.result); t.onerror = () => err(t.error); });
+}
+const lerTodos = loja => tx(loja, "readonly", s => s.getAll());
+const gravar = (loja, obj) => tx(loja, "readwrite", s => s.put(obj));
+const apagar = (loja, id) => tx(loja, "readwrite", s => s.delete(id));
+async function salvarItem(i) { await gravar("estoque", i); const k = S.itens.findIndex(x => x.id === i.id); k < 0 ? S.itens.push(i) : (S.itens[k] = i); render(); }
+async function removerItem(id) { await apagar("estoque", id); S.itens = S.itens.filter(x => x.id !== id); render(); }
+async function salvarMov(m) { await gravar("movimentos", m); S.movs.unshift(m); }
+async function removerMov(id) { await apagar("movimentos", id); S.movs = S.movs.filter(x => x.id !== id); }
+
+(async () => {
+  try {
+    BD = await abrirBD();
+    S.itens = await lerTodos("estoque");
+    S.movs = (await lerTodos("movimentos")).sort((a, b) => b.data.localeCompare(a.data));
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  } catch (e) { aviso("Não consegui abrir o armazenamento do celular. Feche e abra o aplicativo de novo."); }
+  S.ready = true; render(); lembreteBackup();
+})();
+function aviso(t) { $("#banner").innerHTML = t ? `<div class="banner">${t}</div>` : ""; }
+function lembreteBackup() {
+  if (!S.itens.length) return;
+  const ult = localStorage.getItem("ultimoBackup");
+  if (!ult || dias(ult) > 30) aviso(`Faz tempo que não há cópia de segurança. <button class="chip" id="bkNow" style="margin-left:6px">Fazer agora</button>`);
+  const b = $("#bkNow"); if (b) b.onclick = exportar;
+}
+
+/* ============ Tela principal ============ */
+function render() {
+  const main = $("#main");
+  if (!S.ready) { main.innerHTML = `<div class="empty"><div class="status" style="justify-content:center"><span class="dot"></span> Abrindo o umidor…</div></div>`; return; }
+  const ativos = S.itens.filter(i => (i.quantidade || 0) > 0);
+  const total = ativos.reduce((a, i) => a + (i.quantidade || 0), 0);
+  const ini = new Date(); ini.setDate(1); ini.setHours(0, 0, 0, 0);
+  const fumMes = S.movs.filter(m => m.tipo === "saida" && new Date(m.data) >= ini).reduce((a, m) => a + (m.qtd || 1), 0);
+  $("#btnFumar").disabled = total === 0;
+  if (!S.itens.length) {
+    main.innerHTML = `<div class="empty">${IC.cam}<h2>Seu umidor está vazio</h2><p>Toque em <b>Guardar</b>, fotografe o charuto e preencha marca e vitola. A bitola é preenchida sozinha.</p></div>`;
+    return;
+  }
+  const sug = ativos.slice().sort((x, y) => new Date(x.ultimaEntrada) - new Date(y.ultimaEntrada))[0];
+  let html = `<section class="stats" aria-label="Resumo">
+    <div class="stat"><b>${total}</b><span>charutos guardados</span></div>
+    <div class="stat"><b>${ativos.length}</b><span>rótulos diferentes</span></div>
+    <div class="stat"><b>${fumMes}</b><span>fumados neste mês</span></div></section>`;
+  if (sug) html += `<button class="suggest" data-open="${sug.id}"><div class="thumb" style="width:52px;height:52px${sug.foto ? `;background-image:url('${sug.foto}')` : ""}">${sug.foto ? "" : IC.cigar}</div><div><div class="k">Sugestão para hoje</div><div class="n">${esc(nomeDe(sug))} ${esc(sug.vitola ? "— " + sug.vitola : "")}</div><div class="d">O mais descansado do umidor: ${guarda(dias(sug.ultimaEntrada))}</div></div></button>`;
+  html += `<div class="controls"><label class="search"><span class="sr">Buscar charuto</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="busca" type="search" placeholder="Buscar marca, linha, vitola…" value="${esc(S.busca)}"></label>
+    <div class="seg" role="group" aria-label="Agrupar por">
+      <button data-modo="marca" aria-pressed="${S.modo === "marca"}">Por marca</button>
+      <button data-modo="bitola" aria-pressed="${S.modo === "bitola"}">Por bitola</button></div></div><div id="lista"></div>`;
+  main.innerHTML = html;
+  const b = $("#busca"); b.oninput = () => { S.busca = b.value; lista(); };
+  main.querySelectorAll("[data-modo]").forEach(x => x.onclick = () => { S.modo = x.dataset.modo; render(); });
+  main.querySelectorAll(".suggest[data-open]").forEach(x => x.onclick = () => detalhe(x.dataset.open));
+  lista();
+}
+function lista() {
+  const q = norm(S.busca);
+  const it = S.itens.filter(i => !q || norm([i.marca, i.linha, i.vitola, i.pais, i.capa, i.bitola].join(" ")).includes(q))
+    .sort((a, b) => ((b.quantidade > 0) - (a.quantidade > 0)) || nomeDe(a).localeCompare(nomeDe(b), "pt"));
+  const grupos = new Map();
+  for (const i of it) {
+    const g = S.modo === "marca" ? (i.marca || "Sem marca") : (i.bitola ? `Cepo ${i.bitola}` : "Bitola não informada");
+    if (!grupos.has(g)) grupos.set(g, []); grupos.get(g).push(i);
+  }
+  const ordem = [...grupos.keys()].sort((a, b) => S.modo === "bitola" ? (parseInt(a.replace(/\D/g, "")) || 999) - (parseInt(b.replace(/\D/g, "")) || 999) : a.localeCompare(b, "pt"));
+  const el = $("#lista");
+  if (!it.length) { el.innerHTML = `<div class="empty"><p>Nada encontrado para “${esc(S.busca)}”.</p></div>`; return; }
+  el.innerHTML = ordem.map(g => { const arr = grupos.get(g); const soma = arr.reduce((a, i) => a + (i.quantidade || 0), 0);
+    return `<section class="group"><h2>${esc(g)} <em>${soma} un.</em></h2>${arr.map(i => cartao(i, "open")).join("")}</section>`; }).join("");
+  el.querySelectorAll("[data-open]").forEach(x => x.onclick = () => detalhe(x.dataset.open));
+}
+function cartao(i, acao, tag) {
+  const q = i.quantidade || 0; const cls = q === 0 ? "zero" : q <= 1 ? "low" : "";
+  return `<button class="item" data-${acao}="${i.id}" aria-label="${esc(nomeDe(i))}, ${esc(i.vitola || "")}, ${q} unidades">
+    <div class="thumb"${i.foto ? ` style="background-image:url('${i.foto}')"` : ""}>${i.foto ? "" : IC.cigar}</div>
+    <div class="info"><div class="t">${tag || ""}${esc(nomeDe(i))}</div><div class="s">${esc([i.vitola, bitolaTxt(i)].filter(Boolean).join(" · "))}</div>
+    <div class="m">${q === 0 ? "Esgotado" : esc([i.pais, guarda(dias(i.ultimaEntrada))].filter(Boolean).join(" · "))}</div></div>
+    <div class="qty ${cls}"><b>${q}</b><small>${q === 0 ? "acabou" : q <= 1 ? "último" : "un."}</small></div></button>`;
+}
+
+/* ============ Folha e avisos ============ */
+let fecharAtual = null;
+function folha(titulo, corpo) {
+  const trocando = !!fecharAtual;
+  if (trocando) fecharAtual("trocar");
+  const s = document.createElement("div"); s.className = "scrim";
+  s.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(titulo)}"><div class="grab"></div>
+    <div class="sheethead"><h2>${esc(titulo)}</h2><button class="iconbtn" data-x aria-label="Fechar">${IC.x}</button></div><div class="body"></div></div>`;
+  $(".body", s).innerHTML = corpo;
+  document.body.appendChild(s); document.body.style.overflow = "hidden";
+  if (!trocando) history.pushState({ folha: 1 }, "");
+  // modo: true = veio do botão voltar; "trocar" = outra folha vai abrir no lugar (mantém o histórico).
+  const close = (modo) => { if (!s.isConnected) return; s.remove(); fecharAtual = null; if (modo === "trocar") return; document.body.style.overflow = ""; if (!modo && history.state && history.state.folha) history.back(); };
+  s.addEventListener("click", e => { if (e.target === s) close(); });
+  $("[data-x]", s).onclick = () => close();
+  fecharAtual = close;
+  return $(".body", s);
+}
+function fechar(porVoltar) { fecharAtual && fecharAtual(porVoltar); }
+// Botão "voltar" do Android fecha a folha em vez de sair do aplicativo.
+window.addEventListener("popstate", () => fechar(true));
+let toastT;
+function toast(msg, acao, fn) {
+  document.querySelectorAll(".toast").forEach(t => t.remove()); clearTimeout(toastT);
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status");
+  t.innerHTML = `<span>${esc(msg)}</span>${acao ? `<button>${esc(acao)}</button>` : ""}`;
+  document.body.appendChild(t);
+  if (acao) $("button", t).onclick = () => { t.remove(); fn(); };
+  toastT = setTimeout(() => t.remove(), 7000);
+}
+
+/* ============ Foto ============ */
+function pedirFoto() { return new Promise(ok => { const i = $("#cam"); i.value = ""; i.onchange = () => ok(i.files[0] || null); i.click(); }); }
+function miniatura(file) {
+  return new Promise((ok, err) => {
+    const u = URL.createObjectURL(file); const im = new Image();
+    im.onload = () => { const k = Math.min(1, 480 / Math.max(im.naturalWidth, im.naturalHeight)); const c = document.createElement("canvas");
+      c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(u); ok(c.toDataURL("image/jpeg", .75)); };
+    im.onerror = err; im.src = u;
+  });
+}
+
+/* ============ Números ditados ============ */
+const PAL = { um: 1, uma: 1, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10, onze: 11, doze: 12, treze: 13, quatorze: 14, catorze: 14, quinze: 15, dezesseis: 16, dezessete: 17, dezoito: 18, dezenove: 19, vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50, cem: 100 };
+function lerNumero(txt) {
+  const t = norm(txt); const d = t.match(/\d+/); if (d) return parseInt(d[0]);
+  if (/meia duzia/.test(t)) return 6; if (/duzia/.test(t)) return 12;
+  let soma = 0, achou = false; for (const p of t.split(" ")) if (PAL[p] != null) { soma += PAL[p]; achou = true; }
+  return achou ? soma : NaN;
+}
+
+/* ============ GUARDAR ============ */
+$("#btnGuardar").onclick = () => {
+  const body = folha("Guardar charuto", `
+    <button class="drop" id="dropCam" style="width:100%">${IC.cam}<b>Fotografar o charuto</b><span>Enquadre o anel com boa luz.</span></button>
+    <button class="btn sec mt" id="semFoto">Cadastrar sem foto</button>
+    ${S.itens.length ? `<h3 style="font-size:1rem;margin:18px 0 8px">Ou repor um que já está no umidor</h3><div id="rep"></div>` : ""}`);
+  $("#dropCam", body).onclick = async () => { const f = await pedirFoto(); if (!f) return; try { formEntrada(await miniatura(f)); } catch { toast("Não consegui abrir a foto."); } };
+  $("#semFoto", body).onclick = () => formEntrada(null);
+  const rep = $("#rep", body);
+  if (rep) { rep.innerHTML = S.itens.slice().sort((a, b) => nomeDe(a).localeCompare(nomeDe(b), "pt")).map(i => cartao(i, "rep")).join("");
+    rep.querySelectorAll("[data-rep]").forEach(b => b.onclick = () => formEntrada(null, S.itens.find(i => i.id === b.dataset.rep))); }
+};
+function camposForm(r) {
+  const v = k => esc(r[k] ?? "");
+  return `<label class="f"><span>Marca *</span><input name="marca" id="fMarca" value="${v("marca")}" autocomplete="off" placeholder="Ex.: Cohiba"></label><div class="opc" id="sugMarca"></div>
+  <div class="grid2">
+    <label class="f"><span>Linha</span><input name="linha" value="${v("linha")}" placeholder="Ex.: Siglo VI"></label>
+    <label class="f"><span>Vitola</span><select name="vitola" id="fVit"><option value="">—</option>${Object.keys(VITOLAS).map(o => `<option ${o === r.vitola ? "selected" : ""}>${o}</option>`).join("")}${r.vitola && !VITOLAS[r.vitola] ? `<option selected>${esc(r.vitola)}</option>` : ""}</select></label>
+    <label class="f"><span>Bitola (cepo)</span><input name="bitola" id="fBit" inputmode="numeric" value="${v("bitola")}"></label>
+    <label class="f"><span>Comprimento (mm)</span><input name="comprimento_mm" id="fCmp" inputmode="numeric" value="${v("comprimento_mm")}"></label>
+    <label class="f"><span>País</span><input name="pais" id="fPais" value="${v("pais")}"></label>
+    <label class="f"><span>Força</span><select name="forca">${["", "suave", "suave a médio", "médio", "médio a forte", "forte"].map(o => `<option ${o === (r.forca || "") ? "selected" : ""}>${o}</option>`).join("")}</select></label>
+    <label class="f"><span>Capa</span><input name="capa" value="${v("capa")}" placeholder="Ex.: Maduro"></label>
+  </div>`;
+}
+function ligarForm(root) {
+  const m = $("#fMarca", root), sug = $("#sugMarca", root);
+  const conhecidas = () => [...new Set([...Object.keys(MARCAS), ...S.itens.map(i => i.marca).filter(Boolean)])];
+  m.oninput = () => {
+    const q = norm(m.value);
+    const l = q ? conhecidas().filter(x => norm(x).includes(q) && norm(x) !== q).slice(0, 4) : [];
+    sug.innerHTML = l.map(x => `<button type="button" data-m="${esc(x)}">${esc(x)}</button>`).join("");
+    sug.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { m.value = b.dataset.m; sug.innerHTML = ""; m.onchange(); });
+  };
+  m.onchange = () => { const im = infoMarca(m.value); const p = $("#fPais", root); if (im && !p.value) p.value = im.pais; };
+  $("#fVit", root).onchange = e => { const t = VITOLAS[e.target.value]; if (t) { $("#fBit", root).value = t[0]; $("#fCmp", root).value = t[1]; } };
+}
+function lerForm(root) {
+  const o = {}; root.querySelectorAll("[name]").forEach(i => { o[i.name] = i.value.trim(); });
+  o.bitola = parseInt(o.bitola) || null; o.comprimento_mm = parseInt(o.comprimento_mm) || null; return o;
+}
+function formEntrada(foto, existente) {
+  const r = existente || {};
+  const body = folha(existente ? "Repor estoque" : "Dados do charuto", `
+    ${foto ? `<img class="preview" src="${foto}" alt="Foto do charuto" style="max-height:200px;margin-bottom:12px">` : ""}
+    ${existente ? `<div class="item" style="cursor:default">${cartao(existente, "x").replace(/^<button[^>]*>|<\/button>$/g, "")}</div>` : `<div id="f">${camposForm(r)}</div>`}
+    <h3 style="font-size:1.05rem;margin:16px 0 8px">Quantos estão entrando?</h3>
+    <div class="stepper"><button id="menos" aria-label="Diminuir">−</button><input id="qtd" inputmode="text" autocomplete="off" value="1" aria-label="Quantidade"><button id="mais" aria-label="Aumentar">+</button></div>
+    <div class="chips">${[[1, "1"], [5, "5"], [10, "caixa de 10"], [20, "caixa de 20"], [25, "caixa de 25"]].map(([n, t]) => `<button class="chip" data-n="${n}">${t}</button>`).join("")}</div>
+    <p class="hint">Dá para ditar pelo microfone do teclado: “doze”, “meia dúzia”, “vinte e cinco”.</p>
+    <label class="f mt"><span>Preço por unidade (opcional)</span><input id="preco" inputmode="decimal" placeholder="R$"></label>
+    <button class="btn pri mt" id="ok">Guardar no umidor</button>`);
+  if (!existente) ligarForm(body);
+  const q = $("#qtd", body); const val = () => { const n = lerNumero(q.value); return isNaN(n) ? 0 : n; };
+  $("#menos", body).onclick = () => q.value = Math.max(1, val() - 1);
+  $("#mais", body).onclick = () => q.value = val() + 1;
+  body.querySelectorAll("[data-n]").forEach(c => c.onclick = () => q.value = c.dataset.n);
+  q.onblur = () => { const n = val(); if (n > 0) q.value = n; };
+  $("#ok", body).onclick = async () => {
+    const n = val(); if (!n || n < 1) { q.focus(); toast("Informe uma quantidade válida."); return; }
+    const f = existente ? existente : lerForm($("#f", body));
+    if (!f.marca) { $("#fMarca", body).focus(); toast("Informe ao menos a marca."); return; }
+    const preco = parseFloat(($("#preco", body).value || "").replace(/[^\d,.]/g, "").replace(",", ".")) || null;
+    try {
+      const alvo = existente || S.itens.find(i => chave(i) === chave(f));
+      let item;
+      if (alvo) item = { ...alvo, quantidade: (alvo.quantidade || 0) + n, ultimaEntrada: agora(), atualizadoEm: agora(), foto: alvo.foto || foto || null };
+      else item = { id: uid(), ...f, quantidade: n, foto: foto || null, anotacoes: "", criadoEm: agora(), ultimaEntrada: agora(), atualizadoEm: agora() };
+      await salvarItem(item);
+      await salvarMov({ id: uid(), tipo: "entrada", charutoId: item.id, nome: `${nomeDe(item)} ${item.vitola || ""}`.trim(), qtd: n, preco, data: agora() });
+      fechar();
+      toast(`${n} ${n > 1 ? "charutos guardados" : "charuto guardado"}${alvo && !existente ? " (somados à ficha existente)" : ""}.`, "Ver ficha", () => detalhe(item.id));
+    } catch { toast("Não consegui salvar. Tente de novo."); }
+  };
+}
+
+/* ============ FUMAR ============ */
+$("#btnFumar").onclick = () => {
+  const ativos = S.itens.filter(i => (i.quantidade || 0) > 0).sort((a, b) => new Date(a.ultimaEntrada) - new Date(b.ultimaEntrada));
+  const body = folha("Qual vai acender?", `
+    <label class="search" style="display:block"><span class="sr">Filtrar</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="fb" type="search" placeholder="Filtrar…"></label>
+    <div id="fl" class="mt"></div>`);
+  const desenhar = () => {
+    const q = norm($("#fb", body).value);
+    const arr = ativos.filter(i => !q || norm([i.marca, i.linha, i.vitola].join(" ")).includes(q));
+    $("#fl", body).innerHTML = arr.map((i, k) => cartao(i, "fumar", k === 0 && !q ? '<span class="tag" style="margin:0 6px 0 0;color:#e0a458">mais descansado</span>' : "")).join("") || `<p class="hint">Nenhum charuto encontrado.</p>`;
+    body.querySelectorAll("[data-fumar]").forEach(b => b.onclick = () => confirmarSaida(b.dataset.fumar));
+  };
+  $("#fb", body).oninput = desenhar; desenhar();
+};
+function confirmarSaida(id) {
+  const i = S.itens.find(x => x.id === id); if (!i) return;
+  let nota = 0;
+  const body = folha("Boa fumada!", `
+    <div class="item" style="cursor:default">${cartao(i, "x").replace(/^<button[^>]*>|<\/button>$/g, "")}</div>
+    <h3 style="font-size:1rem;margin:14px 0 8px">Avaliação (opcional)</h3>
+    <div class="stars" role="group" aria-label="Nota">${[1, 2, 3, 4, 5].map(n => `<button data-s="${n}" aria-label="${n} de 5">★</button>`).join("")}</div>
+    <label class="f mt"><span>Notas de degustação (opcional)</span><textarea id="com" placeholder="Ex.: cedro e cacau no primeiro terço…"></textarea></label>
+    <button class="btn pri mt" id="ok">Acender — abater 1 do estoque</button>`);
+  body.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { nota = +b.dataset.s; body.querySelectorAll("[data-s]").forEach(x => x.classList.toggle("on", +x.dataset.s <= nota)); });
+  $("#ok", body).onclick = async () => {
+    try {
+      const novo = Math.max(0, (i.quantidade || 0) - 1);
+      await salvarItem({ ...i, quantidade: novo, atualizadoEm: agora() });
+      const mov = { id: uid(), tipo: "saida", charutoId: i.id, nome: `${nomeDe(i)} ${i.vitola || ""}`.trim(), qtd: 1, nota: nota || null, comentario: $("#com", body).value.trim() || null, data: agora() };
+      await salvarMov(mov); fechar();
+      toast(novo === 0 ? "Era o último deste rótulo." : `Restam ${novo}.`, "Desfazer", async () => {
+        const at = S.itens.find(x => x.id === i.id); if (at) await salvarItem({ ...at, quantidade: (at.quantidade || 0) + 1 }); await removerMov(mov.id); render(); toast("Desfeito.");
+      });
+    } catch { toast("Não consegui registrar. Tente de novo."); }
+  };
+}
+
+/* ============ Ficha ============ */
+function detalhe(id) {
+  const i = S.itens.find(x => x.id === id); if (!i) return;
+  const hist = S.movs.filter(m => m.charutoId === id);
+  const notas = hist.filter(m => m.nota); const media = notas.length ? (notas.reduce((a, m) => a + m.nota, 0) / notas.length).toFixed(1).replace(".", ",") : null;
+  const im = infoMarca(i.marca);
+  const spec = (k, v) => v ? `<div class="spec"><small>${k}</small><b>${esc(v)}</b></div>` : "";
+  const body = folha(nomeDe(i), `
+    ${i.foto ? `<div class="hero" style="background-image:url('${i.foto}')" role="img" aria-label="Foto"></div>` : ""}
+    <div class="stepper" aria-label="Ajustar estoque"><button id="dm" aria-label="Tirar 1">−</button><input id="qv" value="${i.quantidade || 0}" readonly aria-label="Quantidade"><button id="dp" aria-label="Somar 1">+</button></div>
+    <p class="hint">Ajuste rápido de contagem. Para registrar uma fumada, use o botão Fumar.</p>
+    <div class="specs">${spec("Vitola", i.vitola)}${spec("Bitola", bitolaTxt(i))}${spec("País", i.pais)}${spec("Força", i.forca)}${spec("Capa", i.capa)}${spec("Guarda", guarda(dias(i.ultimaEntrada)))}${media ? spec("Nota média", media + " / 5") : ""}</div>
+    <section class="lounge" aria-label="Curiosidades"><h3>${IC.spark} Na roda de fumaça</h3>
+      <ul>${im ? im.cur.map(c => `<li>${esc(c)}</li>`).join("") : `<li>Ainda não tenho curiosidades sobre esta marca. Anote abaixo o que souber.</li>`}</ul>
+      <label class="f mt"><span>Minhas anotações sobre este charuto</span><textarea id="anot" placeholder="Quem indicou, onde comprou, ocasião especial…">${esc(i.anotacoes || "")}</textarea></label>
+      ${im ? `<p class="src">Base de curiosidades fixa no aplicativo.</p>` : ""}</section>
+    <h3 style="font-size:1.05rem;margin:6px 0">Histórico</h3>
+    <ul class="hist">${hist.map(m => `<li><span>${m.tipo === "entrada" ? `Entrada de ${m.qtd}${m.preco ? ` <span class="tag">R$ ${m.preco.toFixed(2).replace(".", ",")}/un.</span>` : ""}` : `Fumado${m.nota ? ` <span class="tag">${"★".repeat(m.nota)}</span>` : ""}${m.comentario ? `<br><small style="color:var(--tx2)">${esc(m.comentario)}</small>` : ""}`}</span><span>${fmtData(m.data)}</span></li>`).join("") || `<li><span>Sem movimentos.</span><span></span></li>`}</ul>
+    <details class="edit mt"><summary>Editar dados</summary><div id="f">${camposForm(i)}</div><button class="btn sec" id="salvar">Salvar alterações</button></details>
+    <button class="btn dng mt" id="del">Excluir este rótulo</button>`);
+  ligarForm(body);
+  const qv = $("#qv", body);
+  const ajusta = async d => { const n = Math.max(0, (+qv.value) + d); qv.value = n; const at = S.itens.find(x => x.id === id); await salvarItem({ ...at, quantidade: n, atualizadoEm: agora() }); };
+  $("#dm", body).onclick = () => ajusta(-1); $("#dp", body).onclick = () => ajusta(1);
+  const an = $("#anot", body); an.onchange = async () => { const at = S.itens.find(x => x.id === id); await salvarItem({ ...at, anotacoes: an.value.trim() }); toast("Anotação salva."); };
+  $("#salvar", body).onclick = async () => { const at = S.itens.find(x => x.id === id); const f = lerForm($("#f", body)); if (!f.marca) { toast("Informe a marca."); return; } await salvarItem({ ...at, ...f, atualizadoEm: agora() }); fechar(); toast("Dados atualizados."); };
+  $("#del", body).onclick = async () => { const b = $("#del", body); if (b.dataset.c) { await removerItem(id); fechar(); toast("Rótulo excluído."); } else { b.dataset.c = 1; b.textContent = "Toque de novo para confirmar a exclusão"; } };
+}
+
+/* ============ Diário ============ */
+$("#btnDiario").onclick = () => {
+  const f = S.movs.filter(m => m.tipo === "saida"); const por = {};
+  f.forEach(m => (por[m.nome] = por[m.nome] || []).push(m));
+  const rank = Object.entries(por).map(([n, a]) => { const c = a.filter(x => x.nota); return { n, q: a.length, nota: c.length ? c.reduce((s, x) => s + x.nota, 0) / c.length : null }; })
+    .filter(r => r.nota).sort((a, b) => b.nota - a.nota || b.q - a.q).slice(0, 5);
+  folha("Diário de degustação", f.length ? `
+    ${rank.length ? `<h3 style="font-size:1rem;margin-bottom:6px">Preferidos</h3><ul class="hist">${rank.map(r => `<li><span>${esc(r.n)}</span><span>${"★".repeat(Math.round(r.nota))} · ${r.q}×</span></li>`).join("")}</ul>` : ""}
+    <h3 style="font-size:1rem;margin:16px 0 6px">Últimas fumadas</h3>
+    <ul class="hist">${f.slice(0, 80).map(m => `<li><span>${esc(m.nome)}${m.nota ? ` <span class="tag">${"★".repeat(m.nota)}</span>` : ""}${m.comentario ? `<br><small style="color:var(--tx2)">${esc(m.comentario)}</small>` : ""}</span><span>${fmtData(m.data)}</span></li>`).join("")}</ul>`
+    : `<div class="empty"><p>Nenhuma fumada registrada ainda.</p></div>`);
+};
+
+/* ============ Configurações e cópia de segurança ============ */
+$("#btnConfig").onclick = () => {
+  const ult = localStorage.getItem("ultimoBackup");
+  const body = folha("Configurações", `<div class="set">
+    <p class="muted">Os dados ficam só neste celular. Faça uma cópia de segurança de vez em quando e guarde no Google Drive ou no WhatsApp.</p>
+    <p class="muted">Última cópia: ${ult ? fmtData(ult) : "nunca"}</p>
+    <button class="btn pri" id="exp">Fazer cópia de segurança</button>
+    <button class="btn sec" id="imp">Restaurar de uma cópia</button>
+    ${instalavel ? `<button class="btn sec" id="inst">Instalar na tela inicial</button>` : ""}
+    <p class="muted mt">Charutaria versão ${VERSAO_APP}</p></div>`);
+  $("#exp", body).onclick = exportar;
+  $("#imp", body).onclick = () => { const a = $("#arq"); a.value = ""; a.onchange = () => a.files[0] && importar(a.files[0]); a.click(); };
+  const ib = $("#inst", body); if (ib) ib.onclick = instalar;
+};
+async function exportar() {
+  const dados = JSON.stringify({ app: "charutaria", versao: 1, geradoEm: agora(), estoque: S.itens, movimentos: S.movs });
+  const nome = `charutaria-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  const arquivo = new File([dados], nome, { type: "application/json" });
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [arquivo] })) { await navigator.share({ files: [arquivo], title: "Cópia de segurança da Charutaria" }); }
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(arquivo); a.download = nome; document.body.appendChild(a); a.click(); a.remove(); }
+    localStorage.setItem("ultimoBackup", agora()); aviso(""); toast("Cópia de segurança gerada.");
+  } catch (e) { if (e && e.name !== "AbortError") toast("Não consegui gerar a cópia."); }
+}
+async function importar(file) {
+  try {
+    const d = JSON.parse(await file.text());
+    if (d.app !== "charutaria" || !Array.isArray(d.estoque)) throw 0;
+    const body = folha("Restaurar cópia", `<p>A cópia de ${fmtData(d.geradoEm)} tem <b>${d.estoque.length}</b> rótulos. Isso vai <b>substituir</b> os dados atuais deste celular.</p><button class="btn pri mt" id="conf">Substituir e restaurar</button>`);
+    $("#conf", body).onclick = async () => {
+      await tx("estoque", "readwrite", s => s.clear()); await tx("movimentos", "readwrite", s => s.clear());
+      for (const i of d.estoque) await gravar("estoque", i);
+      for (const m of d.movimentos || []) await gravar("movimentos", m);
+      S.itens = d.estoque; S.movs = (d.movimentos || []).sort((a, b) => b.data.localeCompare(a.data));
+      fechar(); render(); toast("Dados restaurados.");
+    };
+  } catch { toast("Este arquivo não é uma cópia válida da Charutaria."); }
+}
+
+/* ============ Instalação e atualização ============ */
+let instalavel = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); instalavel = e; });
+async function instalar() { if (!instalavel) return; instalavel.prompt(); await instalavel.userChoice; instalavel = null; fechar(); }
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").then(reg => {
+    reg.addEventListener("updatefound", () => {
+      const nw = reg.installing;
+      nw && nw.addEventListener("statechange", () => {
+        if (nw.state === "installed" && navigator.serviceWorker.controller) toast("Nova versão disponível.", "Atualizar", () => nw.postMessage("atualizar"));
+      });
+    });
+  }).catch(() => {});
+  let recarregou = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (!recarregou) { recarregou = true; location.reload(); } });
+}
+</script>
+</body>
+</html>
